@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>B2B 거래처 반복 업무 관리 시스템</title>
+    <title>거래처별 업무 관리 시스템_(회사명)</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -11,28 +11,27 @@
       <div class="header-inner">
         <div>
           <p class="eyebrow">LocalStorage 기반 업무 관리</p>
-          <h1>B2B 거래처 반복 업무 관리 시스템</h1>
+          <h1 id="appTitle">거래처별 업무 관리 시스템_(회사명)</h1>
         </div>
-        <div class="storage-pill">sme_b2b_system_data</div>
+        <div class="header-tools">
+          <label class="company-label" for="companyNameInput">회사명</label>
+          <input id="companyNameInput" class="company-input" type="text" placeholder="회사명 입력" maxlength="40" />
+          <div class="storage-pill">sme_b2b_system_data</div>
+        </div>
       </div>
     </header>
 
     <div class="app-shell">
       <nav class="main-nav no-print" aria-label="주 메뉴">
-        <button class="nav-button active" type="button" data-target="dashboard">대시보드</button>
+        <button class="nav-button active" type="button" data-target="dashboard">업무 현황</button>
         <button class="nav-button" type="button" data-target="clients">거래처 관리</button>
-        <button class="nav-button" type="button" data-target="templates">반복업무 템플릿</button>
         <button class="nav-button" type="button" data-target="tasks">업무 리스트</button>
         <button class="nav-button" type="button" data-target="reports">조회/출력</button>
       </nav>
 
       <main>
-        <section id="dashboard" class="view active" aria-labelledby="dashboard-title">
+        <section id="dashboard" class="view active" aria-label="업무 현황">
           <div class="section-heading">
-            <div>
-              <p class="eyebrow">Dashboard</p>
-              <h2 id="dashboard-title">오늘의 업무 현황</h2>
-            </div>
             <p id="todayLabel" class="muted"></p>
           </div>
           <div id="summaryCards" class="summary-grid"></div>
@@ -40,64 +39,147 @@
             <div class="panel">
               <div class="panel-title-row">
                 <h3>다가오는 업무</h3>
-                <span class="muted">완료 버튼은 상세 기록 모달을 엽니다</span>
+                <span class="muted">체크박스 선택 시 업무 처리 모달이 열립니다</span>
               </div>
               <div id="upcomingTasks" class="stack-list"></div>
             </div>
+          </div>
+        </section>
+
+        <section id="clients" class="view" aria-label="거래처 관리">
+          <div class="client-workspace">
             <div class="panel">
               <div class="panel-title-row">
-                <h3>거래처별 업무 수</h3>
+                <h3>거래처 조회</h3>
+                <span class="muted">거래처명 또는 사업자등록번호로 먼저 검색하세요</span>
               </div>
-              <div id="clientWorkload" class="stack-list"></div>
+              <div class="client-search-row">
+                <label for="clientSearchInput">검색</label>
+                <input id="clientSearchInput" type="search" placeholder="거래처명 또는 사업자등록번호" />
+              </div>
+              <div id="clientDuplicateNotice" class="duplicate-notice" aria-live="polite"></div>
             </div>
+
+            <form id="clientForm" class="panel client-form hidden">
+              <div class="panel-title-row">
+                <h3 id="clientFormTitle">거래처 등록</h3>
+                <button id="clientFormReset" class="secondary-button" type="button">신규 등록</button>
+              </div>
+              <input id="clientIdInput" type="hidden" />
+
+              <div class="form-grid">
+                <div>
+                  <label for="clientNameInput">거래처명 <span class="required">*</span></label>
+                  <input id="clientNameInput" type="text" required minlength="2" />
+                </div>
+                <div>
+                  <label for="clientBusinessNumberInput">사업자등록번호</label>
+                  <input id="clientBusinessNumberInput" type="text" placeholder="000-00-00000" />
+                </div>
+                <div>
+                  <label for="clientContactInput">담당자 <span class="required">*</span></label>
+                  <input id="clientContactInput" type="text" required />
+                </div>
+                <div>
+                  <label for="clientPhoneInput">연락처 <span class="required">*</span></label>
+                  <input id="clientPhoneInput" type="text" required />
+                </div>
+                <div>
+                  <label for="clientEmailInput">이메일</label>
+                  <input id="clientEmailInput" type="email" />
+                </div>
+                <div>
+                  <label for="clientCreatedAtInput">등록일</label>
+                  <input id="clientCreatedAtInput" type="date" readonly />
+                </div>
+                <div class="form-wide">
+                  <label for="clientNotesInput">메모</label>
+                  <textarea id="clientNotesInput" rows="3"></textarea>
+                </div>
+              </div>
+
+              <p id="clientFormMessage" class="form-error" aria-live="polite"></p>
+              <div class="form-actions">
+                <button id="clientSubmitButton" class="primary-button" type="submit">등록</button>
+              </div>
+            </form>
+
+            <div id="clientList" class="card-grid hidden"></div>
           </div>
         </section>
 
-        <section id="clients" class="view" aria-labelledby="clients-title">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">Clients</p>
-              <h2 id="clients-title">거래처 관리</h2>
+        <section id="tasks" class="view" aria-label="업무 리스트">
+          <div class="task-workspace">
+            <div class="panel task-query-panel no-print">
+              <div class="panel-title-row">
+                <h3>업무 조회</h3>
+                <div class="panel-actions">
+                  <span class="muted">종료 예정일 기준 기간 범위는 최대 1년입니다</span>
+                  <button id="taskCreateToggle" class="secondary-button" type="button" aria-expanded="false" aria-controls="taskCreateForm">신규 업무</button>
+                </div>
+              </div>
+              <div class="task-query-grid">
+                <div>
+                  <label for="taskStatusFilter">상태 유형</label>
+                  <select id="taskStatusFilter">
+                    <option value="all">전체</option>
+                    <option value="overdue">경과</option>
+                    <option value="active">진행 중</option>
+                    <option value="today">당일</option>
+                    <option value="upcoming">예정</option>
+                    <option value="future">미도래</option>
+                    <option value="complete">완료</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="taskDateFrom">기간 From</label>
+                  <input id="taskDateFrom" type="text" inputmode="numeric" maxlength="10" placeholder="YY-MM-DD" />
+                </div>
+                <div>
+                  <label for="taskDateTo">기간 To</label>
+                  <input id="taskDateTo" type="text" inputmode="numeric" maxlength="10" placeholder="YY-MM-DD" />
+                </div>
+                <div class="query-action-cell">
+                  <button id="taskSearchButton" class="primary-button" type="button">조회</button>
+                </div>
+              </div>
+              <p id="taskQueryMessage" class="form-error" aria-live="polite"></p>
             </div>
+
+            <form id="taskCreateForm" class="panel task-create-form no-print hidden">
+              <div class="panel-title-row">
+                <h3>신규 업무</h3>
+              </div>
+              <div class="form-grid task-create-grid">
+                <div>
+                  <label for="newTaskClientId">거래처명 <span class="required">*</span></label>
+                  <select id="newTaskClientId" required></select>
+                </div>
+                <div>
+                  <label for="newTaskDueDate">종료 예정일 <span class="required">*</span></label>
+                  <input id="newTaskDueDate" type="text" inputmode="numeric" maxlength="10" placeholder="YY-MM-DD" required />
+                </div>
+                <div class="form-wide">
+                  <label for="newTaskTitle">업무 내용 <span class="required">*</span></label>
+                  <input id="newTaskTitle" type="text" required placeholder="업무 내용을 입력하세요" />
+                </div>
+                <label class="check-option form-wide" for="newTaskMonthlyRepeat">
+                  <input id="newTaskMonthlyRepeat" type="checkbox" />
+                  <span>매월 반복 업무로 등록</span>
+                </label>
+              </div>
+              <p id="taskCreateMessage" class="form-error" aria-live="polite"></p>
+              <div class="form-actions">
+                <button class="primary-button" type="submit">생성</button>
+              </div>
+            </form>
+
+            <div id="taskList" class="stack-list hidden"></div>
           </div>
-          <div id="clientList" class="card-grid"></div>
         </section>
 
-        <section id="templates" class="view" aria-labelledby="templates-title">
+        <section id="reports" class="view" aria-label="조회/출력">
           <div class="section-heading">
-            <div>
-              <p class="eyebrow">Templates</p>
-              <h2 id="templates-title">반복업무 템플릿</h2>
-            </div>
-          </div>
-          <div id="templateList" class="card-grid"></div>
-        </section>
-
-        <section id="tasks" class="view" aria-labelledby="tasks-title">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">Tasks</p>
-              <h2 id="tasks-title">업무 리스트</h2>
-            </div>
-            <div class="filter-row no-print">
-              <label for="taskStatusFilter">상태</label>
-              <select id="taskStatusFilter">
-                <option value="all">전체</option>
-                <option value="대기">대기</option>
-                <option value="진행중">진행중</option>
-                <option value="완료">완료</option>
-              </select>
-            </div>
-          </div>
-          <div id="taskList" class="stack-list"></div>
-        </section>
-
-        <section id="reports" class="view" aria-labelledby="reports-title">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">Reports</p>
-              <h2 id="reports-title">조회/출력</h2>
-            </div>
             <div class="action-row no-print">
               <button id="printReport" class="secondary-button" type="button">인쇄</button>
               <button id="downloadCsv" class="primary-button" type="button">CSV 다운로드</button>
@@ -105,33 +187,48 @@
           </div>
 
           <div class="report-tools no-print">
-            <label for="reportSearch">검색</label>
-            <input id="reportSearch" type="search" placeholder="거래처명 또는 업무명" />
-            <label for="reportStatusFilter">상태</label>
-            <select id="reportStatusFilter">
-              <option value="all">전체</option>
-              <option value="대기">대기</option>
-              <option value="진행중">진행중</option>
-              <option value="완료">완료</option>
-            </select>
+            <div>
+              <label for="reportSearch">검색</label>
+              <input id="reportSearch" type="search" placeholder="거래처명 또는 업무 내용" />
+            </div>
+            <div>
+              <label for="reportStatusFilter">상태</label>
+              <select id="reportStatusFilter">
+                <option value="all">전체</option>
+                <option value="overdue">경과</option>
+                <option value="active">진행 중</option>
+                <option value="today">당일</option>
+                <option value="upcoming">예정</option>
+                <option value="future">미도래</option>
+                <option value="complete">완료</option>
+              </select>
+            </div>
+            <div>
+              <label for="reportDateFrom">기간 From</label>
+              <input id="reportDateFrom" type="text" inputmode="numeric" maxlength="10" placeholder="YY-MM-DD" />
+            </div>
+            <div>
+              <label for="reportDateTo">기간 To</label>
+              <input id="reportDateTo" type="text" inputmode="numeric" maxlength="10" placeholder="YY-MM-DD" />
+            </div>
+            <p id="reportQueryMessage" class="form-error" aria-live="polite"></p>
           </div>
 
           <div class="report-panel">
             <div class="print-title">
               <h2>거래처 중심 업무 완료 이력 보고서</h2>
-              <p id="printDate"></p>
             </div>
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
                     <th>거래처</th>
-                    <th>업무명</th>
-                    <th>마감일</th>
+                    <th>업무 내용</th>
+                    <th>종료 예정일</th>
                     <th>상태</th>
-                    <th>실제완료일</th>
-                    <th>완료내용</th>
-                    <th>실행메모</th>
+                    <th>완료일</th>
+                    <th>완료 내용</th>
+                    <th>실행 메모</th>
                   </tr>
                 </thead>
                 <tbody id="reportRows"></tbody>
@@ -146,8 +243,8 @@
       <div class="modal-panel">
         <div class="modal-header">
           <div>
-            <p class="eyebrow">Completion</p>
-            <h2 id="modalTitle">업무 완료 처리</h2>
+            <p class="eyebrow">Task</p>
+            <h2 id="modalTitle">업무 처리</h2>
           </div>
           <button id="closeModal" class="icon-button" type="button" aria-label="닫기">×</button>
         </div>
@@ -157,11 +254,23 @@
             <strong id="modalTaskTitle"></strong>
           </div>
 
-          <label for="completedAt">완료 날짜</label>
-          <input id="completedAt" name="completedAt" type="date" required />
+          <label for="modalTaskClientId">거래처명</label>
+          <select id="modalTaskClientId" required></select>
+
+          <label for="modalTaskTitleInput">업무 내용</label>
+          <input id="modalTaskTitleInput" type="text" required />
+
+          <label for="modalTaskDueDate">종료 예정일</label>
+          <input id="modalTaskDueDate" type="text" inputmode="numeric" maxlength="10" placeholder="YY-MM-DD" required />
+
+          <label for="modalTaskStartDate">시작일</label>
+          <input id="modalTaskStartDate" type="text" inputmode="numeric" maxlength="10" placeholder="YY-MM-DD" />
+
+          <label for="completedAt">완료일</label>
+          <input id="completedAt" name="completedAt" type="text" inputmode="numeric" maxlength="10" placeholder="YY-MM-DD" />
 
           <label for="completionNote">완료 내용</label>
-          <input id="completionNote" name="completionNote" type="text" required placeholder="예: 월간 보고서 전달 완료" />
+          <input id="completionNote" name="completionNote" type="text" placeholder="예: 월간 보고서 전달 완료" />
 
           <label for="executionMemo">실행 메모</label>
           <textarea id="executionMemo" name="executionMemo" rows="4" placeholder="실행 당시 특이사항을 기록하세요"></textarea>
@@ -169,8 +278,10 @@
           <p id="modalError" class="form-error" aria-live="polite"></p>
 
           <div class="modal-actions">
+            <button id="deleteTaskButton" class="secondary-button danger-button" type="button">삭제</button>
+            <button id="saveTaskButton" class="secondary-button" type="button">수정</button>
             <button id="cancelModal" class="secondary-button" type="button">취소</button>
-            <button class="primary-button" type="submit">저장</button>
+            <button class="primary-button" type="submit">완료</button>
           </div>
         </form>
       </div>
